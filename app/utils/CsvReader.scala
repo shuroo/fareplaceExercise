@@ -10,50 +10,45 @@ import java.io.File
 import java.sql.Connection
 import scala.util.{Failure, Success, Try}
 import com.github.tototoshi.csv._
-
-import scala.concurrent.Future
+import models.{Flight, Price}
 object CsvReader {
 
     val logger: Logger = Logger(this.getClass())
 
-    def batchLoadFlights(): Unit = {
-        for (rows <- scala.io.Source.fromFile(Constants.flightsCSVFileName).getLines(); row <- rows) { // CSVReader.open(new File(fileName)).all()
 
-            val line = row.toString.split(",").map(_.trim)
+    /**
+     * Method to extract all rows from csv as a set (distinct) values.
+     * @param fileName - the file name required
+     * @return Set[List[String]]
+     */
+    def extractCsvRowsAsSet(fileName:String):Set[List[String]] =CSVReader.open(new File(fileName)).all().toSet;
 
-            Try{ JdbcConnector.insertFlight(line) } match {
-                case Success(reader) =>
-                    // Line inserted successfully - logging is optional.
-                    logger.info(s"line:${line} inserted successfully into the flights table.")
-                    true;
-                case Failure(ex) =>
-                    val msg = s"failed to insert row into the Prices table. exception occured:${ex}}"
-                    ex.printStackTrace()
-                    logger.error(msg)
-                    false;
-            }
-        }
+
+    def batchLoadFlights(): Boolean = {
+
+        val allRows:Set[List[String]] = extractCsvRowsAsSet(Constants.pricesCSVFileName)
+        // Return 'true' if a current row was successfully inserted into the db, 'false' otherwise.
+        val insertStatuses = Flight.loadAllFlightRows(allRows)
+        // Return the total status result as an 'And' operation:
+        val sqlTotalInsertionsResult = insertStatuses.foldLeft(true)((acc, isInserted) => {
+            acc & isInserted
+        })
+        sqlTotalInsertionsResult
     }
 
-    def batchLoadPrices(): Unit = {
-        val allRows = CSVReader.open(new File(Constants.pricesCSVFileName)).all();
-        allRows.map{ line=> // CSVReader.open(new File(fileName))
-            // .all()
-
-          //  val line :List[String]= row.split(",").map(_.trim()).toList
-
-            print("line:"+line)
-            Try{ JdbcConnector.insertPrice(line)} match {
-                case Success(reader) =>
-                    // Line inserted successfully - logging is optional.
-                    logger.info(s"line:${line} inserted successfully into the flights table.")
-                    true;
-                case Failure(ex) =>
-                    val msg = s"failed to insert row into the Prices table. exception occured:${ex}}"
-                    ex.printStackTrace()
-                    logger.error(msg)
-                    false;
-            }
-        }
+    /**
+     * Method to batch load from prices.csv into the sql prices table.
+     * @return Boolean - True when ALL records successfully inserted.
+     */
+    def batchLoadPrices(): Boolean = {
+        // Create a set of all (Distinct) csv records
+        val allRows:Set[List[String]] = extractCsvRowsAsSet(Constants.pricesCSVFileName)
+        // Return 'true' if a current row was successfully inserted into the db, 'false' otherwise.
+        val insertStatuses = Price.loadAllPriceRows(allRows)
+        // Return the total status result as an 'And' operation:
+        val sqlTotalInsertionsResult = insertStatuses.foldLeft(true)((acc, isInserted) => {
+            acc & isInserted
+        })
+        sqlTotalInsertionsResult
     }
 }

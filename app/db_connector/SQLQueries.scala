@@ -10,6 +10,8 @@ object SQLQueries {
 
     val dbCreate = """CREATE DATABASE IF NOT EXISTS fareplace_ex_db""".stripMargin
 
+    val dbDrop = """DROP DATABASE fareplace_ex_db""".stripMargin
+
     val dbUse = """Use fareplace_ex_db""".stripMargin
 
     /***
@@ -47,12 +49,10 @@ object SQLQueries {
      */
     val pricesTableCreate = """CREATE Table IF NOT EXISTS Prices
                             ( DepartureDate Date, FlightNumber varchar(5),
-                            NumberOfSeats int , Price int ,
-                             PRIMARY KEY (DepartureDate,FlightNumber))""".stripMargin
+                            NumberOfSeats int , Price double ) """.stripMargin
 
     val pricesTableRowInsertQuery =
         """insert into Prices ( DepartureDate, FlightNumber,
         NumberOfSeats, Price )
         values (?,?,?,?)""".stripMargin
-
 }
