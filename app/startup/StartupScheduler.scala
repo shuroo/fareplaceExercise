@@ -11,7 +11,7 @@ import scala.concurrent.Future
 @Singleton
 class StartupScheduler @Inject()(lifecycle: ApplicationLifecycle) {
 
-    db_connector.JdbcConnector.mysqlConnect()
+    db_connector.JdbcConnector.dbConnect()
     db_connector.JdbcConnector.initMysqlDB()
     print("************************************I ran on startup!*********************************")
 

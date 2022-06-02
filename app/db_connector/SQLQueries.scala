@@ -1,18 +1,16 @@
 package db_connector
 
-import java.sql.PreparedStatement
-
 /**
  * Class for sql queries (constants)
  * author: shirirave
  */
 object SQLQueries {
 
-    val dbCreate = """CREATE DATABASE IF NOT EXISTS fareplace_ex_db""".stripMargin
+    //todo: change according to sqlite... command
+    val dbDropFlights = """drop table Flights;""".stripMargin // ISO-8601
+    val dbDropPrices = """ drop table Prices;""".stripMargin // ISO-8601
 
-    val dbDrop = """DROP DATABASE fareplace_ex_db""".stripMargin
 
-    val dbUse = """Use fareplace_ex_db""".stripMargin
 
     /***
      * Flight table format should be:

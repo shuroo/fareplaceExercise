@@ -37,12 +37,13 @@ object JdbcConnector {
      * Create a Basic Connection to mysql
      * @return Option[Connection] - the connection wrapped in some when succeeded, or None otherwise.
      */
-    def mysqlConnect(): Option[Connection] = {
+    def dbConnect(): Option[Connection] = {
         Try {
             // make the connection
             Class.forName(Constants.jdbcDriver)
-            connection = DriverManager.getConnection(
-                Constants.mysqlServerUrl, Constants.mysqlUserName, Constants.mysqlPassword);
+            import java.sql.DriverManager
+            Class.forName(Constants.jdbcDriver)
+            connection = DriverManager.getConnection(Constants.dbName)
             connection
         } match {
             case Success(connection) =>
@@ -64,9 +65,7 @@ object JdbcConnector {
     def initMysqlDB(): Boolean = {
         Class.forName(Constants.jdbcDriver)
         val statement = connection.createStatement()
-        Try {
-            statement.execute(SQLQueries.dbCreate)
-            statement.execute(SQLQueries.dbUse)
+        Try  {
             statement.execute(SQLQueries.flightsTableCreate)
             statement.execute(SQLQueries.pricesTableCreate)
         } match {
@@ -87,9 +86,16 @@ object JdbcConnector {
      */
     def dropAndRecreateDatabase(): Boolean ={
         Class.forName(Constants.jdbcDriver)
-        val statement = connection.createStatement()
         Try {
-            statement.execute(SQLQueries.dbDrop)
+            val statement = connection.prepareStatement(SQLQueries.dbDropFlights)
+            statement.execute(SQLQueries.dbDropFlights)
+            val stmt = connection.createStatement
+            val sqlCommand =  SQLQueries.dbDropPrices;// "DROP TABLE IF EXISTS 'myDatabase.myTable'
+            stmt.executeUpdate(sqlCommand);
+
+            stmt.close// "
+            connection.commit
+            System.out.println("output : " + stmt.executeUpdate(sqlCommand))
         } match {
             case Success(resultSet) =>
                 initMysqlDB();
