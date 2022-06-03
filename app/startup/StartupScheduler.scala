@@ -9,10 +9,10 @@ import scala.concurrent.Future
 
 // This creates an `ApplicationStart` object once at start-up and registers hook for shut-down.
 @Singleton
-class StartupScheduler @Inject()(lifecycle: ApplicationLifecycle) {
+class StartupScheduler @Inject()(connector:JdbcConnector)(lifecycle: ApplicationLifecycle) {
 
-    db_connector.JdbcConnector.dbConnect()
-    db_connector.JdbcConnector.initMysqlDB()
+    connector.dbConnect()
+    connector.initMysqlDB()
     print("************************************I ran on startup!*********************************")
 
 
@@ -20,7 +20,7 @@ class StartupScheduler @Inject()(lifecycle: ApplicationLifecycle) {
     lifecycle.addStopHook {
         () =>
             print("************************************I ran on stop!*********************************")
-            JdbcConnector.closeConnection();
+            connector.closeConnection();
             Future.successful(())
     }
     //...

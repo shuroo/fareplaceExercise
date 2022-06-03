@@ -2,9 +2,10 @@ package controllers
 
 import db_connector.JdbcConnector
 
+import scala.concurrent.ExecutionContext.Implicits.global
 import javax.inject._
 import play.api.mvc._
-import utils.{CsvReader, FarePlaceExCustomExecutionContextImpl}
+import utils.{CsvReader, CsvReaderImpl}
 
 import scala.concurrent.Future
 
@@ -13,7 +14,8 @@ import scala.concurrent.Future
  * application's home page.
  */
 @Singleton
-class HomeController @Inject()(val controllerComponents: ControllerComponents, customExecutionContext: FarePlaceExCustomExecutionContextImpl) extends
+class HomeController @Inject()(val controllerComponents: ControllerComponents,reader:CsvReaderImpl,
+                               connector:JdbcConnector) extends
   BaseController {
 
   /**
@@ -24,11 +26,11 @@ class HomeController @Inject()(val controllerComponents: ControllerComponents, c
 
     //val nameResult: JsResult[SendEmailBody] = (request.body).validate[SendEmailBody]
     Future{
-        JdbcConnector.dropAndRecreateDatabase()
-        CsvReader.batchLoadFlights()
-        CsvReader.batchLoadPrices()
+        connector.dropAndRecreateDatabase()
+        reader.batchLoadFlights()
+        reader.batchLoadPrices()
         Ok("Successfully refresh the current database and restored its values")
-      }(customExecutionContext)}
+      }}
 
   def getPriceWithConnection(date:String,from:String,to:String) = Action {
     implicit request: Request[AnyContent] =>

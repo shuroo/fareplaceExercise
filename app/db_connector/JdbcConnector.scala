@@ -2,14 +2,18 @@ package db_connector
 
 import java.sql.{Connection, DriverManager, PreparedStatement}
 import scala.util.{Failure, Success, Try}
-import utils.Constants
+import utils.{Constants}
 import play.api.Logger
+
+import scala.concurrent.ExecutionContext.Implicits.global
+import java.sql.DriverManager
+import javax.inject.Inject
 /**
  * A Scala JDBC connection example, based on the example given HERE: https://alvinalexander.com
  *  [ I PERSONALLY DO NOT FANCY THIS CODE SO MUCH - AS THIS IS A BLOCKING OPERATION.
  * IN REAL APPLICATION WE WILL USE REACTIVE STREAMS.. ETC ].
  */
-object JdbcConnector {
+class JdbcConnector  @Inject()(){
     var connection: Connection = null;
     val logger: Logger = Logger(this.getClass())
 
@@ -40,8 +44,6 @@ object JdbcConnector {
     def dbConnect(): Option[Connection] = {
         Try {
             // make the connection
-            Class.forName(Constants.jdbcDriver)
-            import java.sql.DriverManager
             Class.forName(Constants.jdbcDriver)
             connection = DriverManager.getConnection(Constants.dbName)
             connection

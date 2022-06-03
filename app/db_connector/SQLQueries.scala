@@ -7,8 +7,8 @@ package db_connector
 object SQLQueries {
 
     //todo: change according to sqlite... command
-    val dbDropFlights = """drop table Flights;""".stripMargin // ISO-8601
-    val dbDropPrices = """ drop table Prices;""".stripMargin // ISO-8601
+    val dbDropFlights = """drop table IF EXISTS Flights;""".stripMargin // ISO-8601
+    val dbDropPrices = """ drop table IF EXISTS Prices;""".stripMargin // ISO-8601
 
 
 
