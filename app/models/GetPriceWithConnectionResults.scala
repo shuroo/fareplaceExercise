@@ -9,13 +9,13 @@ import play.api.libs.json.{JsObject, Json, __}
  *  {"FlightNumbers":["123"],"Path":"TLV-BER","Price":"100.0"}
  */
 
-case class GetPriceWithConnectionResults(sql_records: String, is_success: Boolean, error_msg: String)
+case class GetPriceWithConnectionResults(sql_records: Seq[JsObject], is_success: Boolean, error_msg: String)
 
 object GetPriceWithConnectionResults{
-//    implicit val results_reader = (__ \ "sql_records").read[Seq[JsObject]] and
-//                                 (__ \ "is_success").readNullable[Boolean] and
-//                                  (__ \ "error_msg").readNullable[String]
-//
-//
-//    implicit val results_writer = Json.writes[GetPriceWithConnectionResults]
+    implicit val results_reader = (__ \ "sql_records").read[Seq[JsObject]] and
+                                 (__ \ "is_success").readNullable[Boolean] and
+                                  (__ \ "error_msg").readNullable[String]
+
+
+    implicit val results_writer = Json.writes[GetPriceWithConnectionResults]
 }

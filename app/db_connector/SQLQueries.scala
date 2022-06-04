@@ -54,12 +54,22 @@ object SQLQueries {
         NumberOfSeats, Price )
         values (?,?,?,?)""".stripMargin
 
-    val getPriceWithConnectionQuery = """
-                                        |select ('{"FlightNumbers":["'||FlightNumber||'"],"Path":"'||path||'",
-                                        |"Price":"'||Price||'","FlightDuration":"'||FlightDuration||'",
-                                        |"DepartureTime":"'||DepartureTime||'"}') from directFlights where
-                                        | dte='?' and src='?' and dst='?';
-                                        |""".stripMargin
+//    def getPriceWithConnectionQuery(dte:String,from:String,to:String) = s"""
+//                                        |select ('{"FlightNumbers":["'||FlightNumber||'"],"Path":"'||path||'",
+//                                        |"Price":"'||Price||'","FlightDuration":"'||FlightDuration||'",
+//                                        |"DepartureTime":"'||DepartureTime||'"}') as resJson from directFlights where
+//                                        | dte='${dte}' and src='${from}' and dst='${to}';
+//                                        |""".stripMargin
+
+    //  Json.obj
+
+    def getPriceWithConnectionQuery(dte:String,from:String,to:String) = s"""
+                                                                           |select '['||FlightNumber||']' as FlightNumbers,
+                                                                           path,
+                                                                           Price,FlightDuration,
+                                                                           | DepartureTime from directFlights where
+                                                                           | dte='${dte}' and src='${from}' and dst='${to}';
+                                                                           |""".stripMargin
 }
 
 // select * from directFlights where dte='?' and src='?' and dst='?';
