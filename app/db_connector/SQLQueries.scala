@@ -53,4 +53,13 @@ object SQLQueries {
         """insert into Prices ( DepartureDate, FlightNumber,
         NumberOfSeats, Price )
         values (?,?,?,?)""".stripMargin
+
+    val getPriceWithConnectionQuery = """
+                                        |select ('{"FlightNumbers":["'||FlightNumber||'"],"Path":"'||path||'",
+                                        |"Price":"'||Price||'","FlightDuration":"'||FlightDuration||'",
+                                        |"DepartureTime":"'||DepartureTime||'"}') from directFlights where
+                                        | dte='?' and src='?' and dst='?';
+                                        |""".stripMargin
 }
+
+// select * from directFlights where dte='?' and src='?' and dst='?';

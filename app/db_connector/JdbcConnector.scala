@@ -49,7 +49,7 @@ class JdbcConnector  @Inject()(){
             connection
         } match {
             case Success(connection) =>
-                val msg = s"MySql connection successfully established."
+                val msg = s"Sql connection successfully established."
                 logger.info(msg)
                 Some(connection)
             case Failure(ex) =>
