@@ -64,11 +64,14 @@ object SQLQueries {
     //  Json.obj
 
     def getPriceWithConnectionQuery(dte:String,from:String,to:String) = s"""
-                                                                           |select '['||FlightNumber||']' as FlightNumbers,
-                                                                           path,
-                                                                           Price,FlightDuration,
-                                                                           | DepartureTime from directFlights where
-                                                                           | dte='${dte}' and src='${from}' and dst='${to}';
+                                                                           | select * from directFlightsSample
+                                                                           | union
+                                                                           | select * from oneConnectionSample
+                                                                           | union
+                                                                           | select * from twoConnectionsSample
+                                                                           | where
+                                                                           | dte='${dte}' and src='${from}' and dst='${to}'
+                                                                           | order by dte desc
                                                                            |""".stripMargin
 }
 

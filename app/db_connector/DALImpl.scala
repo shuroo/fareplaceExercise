@@ -32,8 +32,10 @@ class DALImpl @Inject()(connector: JdbcConnector) extends DAL {
 
                 val srcFormatted = src.toUpperCase()
                 val dstFormatted = dst.toUpperCase()
-                val dteFormatted = DateUtils.toSimpleDate(dte)
-                val sttment = conn.prepareStatement(SQLQueries.getPriceWithConnectionQuery(dteFormatted,srcFormatted,dstFormatted))
+                val dteFormatted = DateUtils.formatDateParam(dte)
+                val query = SQLQueries.getPriceWithConnectionQuery(dteFormatted,srcFormatted,dstFormatted)
+                val sttment = conn.prepareStatement(query)
+                print("query:"+query)
                 Future {
                     val maybeRs = Try{sttment.executeQuery()}
                     maybeRs match {
@@ -47,6 +49,7 @@ class DALImpl @Inject()(connector: JdbcConnector) extends DAL {
                                     "Price" -> rs.getString(3),
                                     "FlightDuration" -> rs.getString(4),
                                 "DepartureTime"->rs.getString(5))
+
                                 }
 
                                 print("^^^results:",resJsons)
