@@ -10,6 +10,9 @@ import scala.concurrent.Future
  */
 trait DAL{
 
+    def createDB(): Future[Boolean]
+    def dropAndRecreateDatabase(): Future[Boolean]
+
     def loadFlightRecord(row:List[String]):Future[Boolean]
 
     def loadPriceRecord(row:List[String]):Future[Boolean]

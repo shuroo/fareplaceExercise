@@ -1,10 +1,6 @@
 package controllers
 
 import db_connector.{DAL, DALImpl, JdbcConnector}
-import models.GetPriceWithConnectionResults
-import play.api.libs.functional.syntax.toFunctionalBuilderOps
-import play.api.libs.json.{Json}
-
 import scala.concurrent.ExecutionContext.Implicits.global
 import javax.inject._
 import play.api.mvc._
@@ -12,53 +8,84 @@ import utils.{CsvReader}
 
 import scala.concurrent.Future
 import play.api.libs.json._
+
 /**
  * This controller creates an `Action` to handle HTTP requests to the
  * application's home page.
  */
 @Singleton
 class HomeController @Inject()(val controllerComponents: ControllerComponents,
-                               reader:CsvReader,dal:DAL,
-                               connector:JdbcConnector) extends
-  BaseController {
+                               reader: CsvReader, dal: DAL) extends
+    BaseController {
 
-//    implicit val results_reader = (__ \ "sql_records").read[Seq[JsObject]] and
-//                                  (__ \ "is_success").readNullable[Boolean] and
-//                                  (__ \ "error_msg").readNullable[String]
-//
-//
-//    implicit val results_writer = Json.writes[GetPriceWithConnectionResults]
+    /**
+     * Load csv into the already existing database (tables previously created)
+     * @return
+     */
+    def loadCSV = {
+        Action.async {
+            request =>
+                        for(
+                            flightLoadResult <- reader.batchLoadFlights();
+                            priceLoadResults <- reader.batchLoadPrices())
+                        yield {
+                            Ok("Successfully refreshed the current database and restored its values")
+                        }}
+                }
 
-  /**
-   * Method to refresh and recreate the mysql db + data on click.
-   * @return
-   */
-  def refreshDatabase = Action.async { request =>
+    /**
+     * Method to refresh and recreate the mysql db + data on click.
+     *
+     * @return
+     */
+    def refreshDatabase = {
+        Action.async {
+            request =>
+                dal.dropAndRecreateDatabase().flatMap {
+                    case true =>
+                        for(
+                        flightLoadResult <- reader.batchLoadFlights();
+                        priceLoadResults <- reader.batchLoadPrices())
+                            yield{
+                                Ok("Successfully refresh the current database and restored its values")
+                            }
+                    case false =>
+                        Future.successful(BadRequest("Failed to refresh database! Aborting"))
+                }
+        }
+    }
 
-    Future{
-        connector.dropAndRecreateDatabase()
-        reader.batchLoadFlights()
-        reader.batchLoadPrices()
-        Ok("Successfully refresh the current database and restored its values")
-      }}
+    def getPriceWithConnection(date: String, from: String, to: String) = {
+        Action.async {
+            request =>
 
-  def getPriceWithConnection(date:String,from:String,to:String) = Action.async { request =>
+                // implicit val results_writer = Json.writes[JsObject]
+                dal.getPriceWithConnection(date, from, to).map(_.sql_records.mkString(",")).map(Ok(_))
 
-      implicit val results_writer = Json.writes[JsObject]
-      dal.getPriceWithConnection(date,from,to).map(_.sql_records.mkString(",")).map(Ok(_))
-           // seq[future] => future[seq]
-//           dal.getPriceWithConnection(date,from,to).map(recordsWrapper=>Future.
-//               sequence(recordsWrapper.sql_records)).map(results=>Ok(_))
+        }
+    }
 
-       }
+    /**
+     * Sample Data to access a similar endpoint
+     */
+    def getPriceWithConnectionTestData(date: String, from: String, to: String): Unit ={
+        Action.async {
+            request =>
 
+                // implicit val results_writer = Json.writes[JsObject]
+                dal.getPriceWithConnection(date, from, to).map(_.sql_records.mkString(",")).map(Ok(_))
 
+        }
+    }
 
-/**
-   * Main default endpoint for the "/" get request. returns 'ok'
-   */
-  def index() = Action { implicit request: Request[AnyContent] =>
+    /**
+     * Main default endpoint for the "/" get request. returns 'ok'
+     */
+    def index() = {
+        Action {
+            implicit request: Request[AnyContent] =>
 
-    Ok("ok")
-  }
+                Ok("ok")
+        }
+    }
 }

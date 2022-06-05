@@ -1,12 +1,11 @@
 package db_connector
 
-import java.sql.{Connection, DriverManager, PreparedStatement}
+import java.sql.{Connection, DriverManager, PreparedStatement, Statement}
 import scala.util.{Failure, Success, Try}
-import utils.{Constants}
+import utils.Constants
 import play.api.Logger
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import java.sql.DriverManager
 import javax.inject.Inject
 /**
  * A Scala JDBC connection example, based on the example given HERE: https://alvinalexander.com
@@ -17,6 +16,13 @@ class JdbcConnector  @Inject()(){
     var connection: Connection = null;
     val logger: Logger = Logger(this.getClass())
 
+    /**
+     * Create statement for table and view (-metadata) manipulation queries (like create,drop, etc).
+     * @return
+     */
+    def createStatement():Statement = {
+        connection.createStatement()
+    }
     /**
      * On shut down: Method to close the jdbc connection.
      * @return boolean: was the attempt succeeded or not.
@@ -58,54 +64,6 @@ class JdbcConnector  @Inject()(){
                 logger.error(msg)
                 connection.close()
                 None
-        }
-    }
-
-    /**
-     * Init mySql Database
-     */
-    def initMysqlDB(): Boolean = {
-        Class.forName(Constants.jdbcDriver)
-        val statement = connection.createStatement()
-        Try  {
-            statement.execute(SQLQueries.flightsTableCreate)
-            statement.execute(SQLQueries.pricesTableCreate)
-        } match {
-            case Success(resultSet) =>
-                val msg = s"MySql db was successfully created."
-                logger.info(msg)
-                true
-            case Failure(ex) =>
-                val msg = s"Failed to build mysql tables. Exception occured:${ex}}"
-                ex.printStackTrace()
-                logger.error(msg)
-                false
-        }
-    }
-
-    /**
-     * Drop the current database and recreate all its records.
-     */
-    def dropAndRecreateDatabase(): Boolean ={
-        Class.forName(Constants.jdbcDriver)
-        Try {
-            val statement = connection.prepareStatement(SQLQueries.dbDropFlights)
-            statement.execute(SQLQueries.dbDropFlights)
-            val stmt = connection.createStatement
-            val sqlCommand =  SQLQueries.dbDropPrices;// "DROP TABLE IF EXISTS 'myDatabase.myTable'
-            stmt.executeUpdate(sqlCommand);
-
-            stmt.close// "
-            connection.commit
-            System.out.println("output : " + stmt.executeUpdate(sqlCommand))
-        } match {
-            case Success(resultSet) =>
-                initMysqlDB();
-            case Failure(ex) =>
-                val msg = s"Failed to drop mysql database. Exception occured:${ex}}"
-                ex.printStackTrace()
-                logger.error(msg)
-                false
         }
     }
 
