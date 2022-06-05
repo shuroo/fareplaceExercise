@@ -1,10 +1,12 @@
 package controllers
 
 import db_connector.{DAL, DALImpl, JdbcConnector}
+import models.GetPriceWithConnectionResults
+
 import scala.concurrent.ExecutionContext.Implicits.global
 import javax.inject._
 import play.api.mvc._
-import utils.{CsvReader}
+import utils.CsvReader
 
 import scala.concurrent.Future
 import play.api.libs.json._
@@ -22,9 +24,8 @@ class HomeController @Inject()(val controllerComponents: ControllerComponents,
      * Load csv into the already existing database (tables previously created)
      * @return
      */
-    def loadCSV = {
-        Action.async {
-            request =>
+    def loadCSV:Action[AnyContent] = {
+        Action.async{ request =>
                         for(
                             flightLoadResult <- reader.batchLoadFlights();
                             priceLoadResults <- reader.batchLoadPrices())
@@ -34,49 +35,27 @@ class HomeController @Inject()(val controllerComponents: ControllerComponents,
                 }
 
     /**
-     * Method to refresh and recreate the mysql db + data on click.
-     *
-     * @return
+     * Main method for 'getPriceWithConnection' endpoint.
+     * @param date - The requested flight date;
+     * @param from - The departure airport required;
+     * @param to - the Arrival airport required
+     * @return Action[AnyContent] - response status 200 (OK) - sequence of json results
      */
-    def refreshDatabase = {
+    def getPriceWithConnection(date: String, from: String, to: String):Action[AnyContent] =
         Action.async {
             request =>
-                dal.dropAndRecreateDatabase().flatMap {
-                    case true =>
-                        for(
-                        flightLoadResult <- reader.batchLoadFlights();
-                        priceLoadResults <- reader.batchLoadPrices())
-                            yield{
-                                Ok("Successfully refresh the current database and restored its values")
-                            }
-                    case false =>
-                        Future.successful(BadRequest("Failed to refresh database! Aborting"))
+                dal.getPriceWithConnection(date, from, to) map {
+                    result: GetPriceWithConnectionResults => result.is_success match {
+                        case true =>
+                            // Better to return as json with writers and not as a string.
+                            Ok(result.sql_records.mkString(","))
+
+                        case false =>
+                            BadRequest(Json.obj("msg" -> result.error_msg))
+                    }
                 }
         }
-    }
 
-    def getPriceWithConnection(date: String, from: String, to: String) = {
-        Action.async {
-            request =>
-
-                // implicit val results_writer = Json.writes[JsObject]
-                dal.getPriceWithConnection(date, from, to).map(_.sql_records.mkString(",")).map(Ok(_))
-
-        }
-    }
-
-    /**
-     * Sample Data to access a similar endpoint
-     */
-    def getPriceWithConnectionTestData(date: String, from: String, to: String): Unit ={
-        Action.async {
-            request =>
-
-                // implicit val results_writer = Json.writes[JsObject]
-                dal.getPriceWithConnection(date, from, to).map(_.sql_records.mkString(",")).map(Ok(_))
-
-        }
-    }
 
     /**
      * Main default endpoint for the "/" get request. returns 'ok'

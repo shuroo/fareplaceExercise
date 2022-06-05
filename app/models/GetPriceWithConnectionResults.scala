@@ -1,7 +1,7 @@
 package models
 
-import play.api.libs.functional.syntax.toFunctionalBuilderOps
-import play.api.libs.json.{JsObject, Json, __}
+import play.api.libs.functional.syntax.{toFunctionalBuilderOps, unlift}
+import play.api.libs.json.{JsObject, Json, Writes, __}
 
 /**
  * Json Structure to return connections: flight numbers, path, total price - as json object.
@@ -13,9 +13,13 @@ case class GetPriceWithConnectionResults(sql_records: Seq[JsObject], is_success:
 
 object GetPriceWithConnectionResults{
     implicit val results_reader = (__ \ "sql_records").read[Seq[JsObject]] and
-                                 (__ \ "is_success").readNullable[Boolean] and
+                                 (__ \ "is_success").read[Boolean] and
                                   (__ \ "error_msg").readNullable[String]
 
 
-    implicit val results_writer = Json.writes[GetPriceWithConnectionResults]
+    implicit val results_writer  =
+        ((__ \ "sql_records").write[Seq[JsObject]] and
+        (__ \ "is_success").write[Boolean] and
+         (__ \ "error_msg").write[String] )((unlift(GetPriceWithConnectionResults.unapply)))
+
 }
